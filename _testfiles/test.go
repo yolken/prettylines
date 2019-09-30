@@ -2,6 +2,9 @@ package testfiles
 
 import "fmt"
 
+// Another comment
+// A third comment
+// Split
 func longLine(aReallyLongName string, anotherLongName string, aThirdLongName string) (string, error) {
 	argument1 := "argument1"
 	argument2 := "argument2"
