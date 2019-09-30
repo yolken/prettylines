@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os/exec"
 	"reflect"
 
 	"github.com/dave/dst"
@@ -26,7 +27,7 @@ func processContents(contents []byte) []byte {
 
 	// Do an initial gofmt run on the file
 	var err error
-	contents, err = formatFile(contents)
+	contents, err = runGoFmt(contents)
 	if err != nil {
 		log.Fatalf("Error formatting file: %+v", err)
 	}
@@ -64,6 +65,27 @@ func processContents(contents []byte) []byte {
 	}
 
 	return removeAnnotations(contents)
+}
+
+func runGoFmt(contents []byte) ([]byte, error) {
+	output := bytes.NewBuffer([]byte{})
+
+	path, err := exec.LookPath("gofmt")
+	if err != nil {
+		log.Fatal("Cannot find gofmt in path")
+	}
+
+	cmd := exec.Cmd{
+		Path:   path,
+		Stdin:  bytes.NewReader(contents),
+		Stdout: output,
+	}
+
+	err = cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+	return output.Bytes(), nil
 }
 
 func formatNode(node dst.Node) {
