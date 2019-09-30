@@ -6,6 +6,7 @@ import (
 )
 
 type Opts struct {
+	Debug string
 }
 
 func init() {

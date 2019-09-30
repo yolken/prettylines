@@ -24,14 +24,15 @@ func shorten(filePath string) {
 func processContents(contents []byte) []byte {
 	round := 0
 
+	// Do an initial gofmt run on the file
+	var err error
+	contents, err = formatFile(contents)
+	if err != nil {
+		log.Fatalf("Error formatting file: %+v", err)
+	}
+
 	for {
 		log.Debugf("Starting round %d", round)
-
-		var err error
-		contents, err = formatFile(contents)
-		if err != nil {
-			log.Fatalf("Error formatting file: %+v", err)
-		}
 
 		var linesToShorten int
 		contents, linesToShorten = annotateLongLines(contents)

@@ -4,7 +4,7 @@ import "fmt"
 
 // Another comment
 // A third comment
-// Split
+// This is a really really long comment that needs to be split up into multiple lines. I don't know how easy it will be to do, but I think we can do it!
 func longLine(aReallyLongName string, anotherLongName string, aThirdLongName string) (string, error) {
 	argument1 := "argument1"
 	argument2 := "argument2"
