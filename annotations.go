@@ -8,7 +8,7 @@ import (
 
 const (
 	tabLen = 4
-	maxLen = 80
+	maxLen = 100
 )
 
 func annotateLongLines(contents []byte) ([]byte, int) {
