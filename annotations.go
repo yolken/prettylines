@@ -33,7 +33,7 @@ func annotateLongLines(contents []byte) ([]byte, int) {
 				)
 				linesToShorten += 1
 			}
-		} else if length > maxLen {
+		} else if !isComment(line) && length > maxLen {
 			annotatedLines = append(
 				annotatedLines,
 				fmt.Sprintf(
@@ -94,4 +94,8 @@ func parseAnnotation(line string) int {
 		return val
 	}
 	return -1
+}
+
+func isComment(line string) bool {
+	return strings.HasPrefix(strings.Trim(line, " \t"), "//")
 }
