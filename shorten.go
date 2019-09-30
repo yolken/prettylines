@@ -56,6 +56,9 @@ func processContents(contents []byte) []byte {
 			log.Fatal(err)
 		}
 		contents = output.Bytes()
+
+		fmt.Print(string(contents))
+
 		round++
 	}
 
@@ -69,7 +72,7 @@ func formatNode(node dst.Node) {
 		formatDecl(n)
 	case dst.Expr:
 		log.Debugf("Processing expression: %+v", n)
-		formatExpr(n)
+		formatExpr(n, false)
 	case dst.Stmt:
 		log.Debugf("Processing statement: %+v", n)
 		formatStmt(n)
@@ -79,10 +82,11 @@ func formatNode(node dst.Node) {
 func formatDecl(decl dst.Decl) {
 	switch d := decl.(type) {
 	case *dst.FuncDecl:
-		log.Debugf("Got a function declaration: %+v", d)
-		if d.Type != nil && d.Type.Params != nil {
-			for f, field := range d.Type.Params.List {
-				formatField(f, field)
+		if hasAnnotation(decl) {
+			if d.Type != nil && d.Type.Params != nil {
+				for f, field := range d.Type.Params.List {
+					formatField(f, field)
+				}
 			}
 		}
 
@@ -94,6 +98,7 @@ func formatDecl(decl dst.Decl) {
 	default:
 		log.Debugf("Got another type of declaration: %+v", reflect.TypeOf(d))
 	}
+
 }
 
 func formatField(f int, field *dst.Field) {
@@ -104,24 +109,43 @@ func formatField(f int, field *dst.Field) {
 }
 
 func formatStmt(stmt dst.Stmt) {
+	shouldShorten := hasAnnotation(stmt)
+
 	switch s := stmt.(type) {
 	case *dst.ExprStmt:
-		formatExpr(s.X)
+		formatExpr(s.X, shouldShorten)
+	case *dst.AssignStmt:
+		for _, expr := range s.Rhs {
+			formatExpr(expr, shouldShorten)
+		}
 	default:
 		log.Debugf("Got another statement type: %+v", reflect.TypeOf(s))
 	}
 }
 
-func formatExpr(expr dst.Expr) {
+func formatExpr(expr dst.Expr, force bool) {
+	shouldShorten := force || hasAnnotation(expr)
+
 	switch e := expr.(type) {
 	case *dst.CallExpr:
 		for a, arg := range e.Args {
-			if a == 0 {
-				arg.Decorations().Before = dst.NewLine
+			if shouldShorten {
+				if a == 0 {
+					arg.Decorations().Before = dst.NewLine
+				}
+				arg.Decorations().After = dst.NewLine
 			}
-			arg.Decorations().After = dst.NewLine
+			formatExpr(arg, false)
 		}
+	case *dst.BinaryExpr:
+		formatExpr(e.X, shouldShorten)
+		formatExpr(e.Y, shouldShorten)
 	default:
 		log.Debugf("Got another expression type: %+v", reflect.TypeOf(e))
 	}
+}
+
+func hasAnnotation(node dst.Node) bool {
+	startDecorations := node.Decorations().Start.All()
+	return len(startDecorations) > 0 && isAnnotation(startDecorations[len(startDecorations)-1])
 }
